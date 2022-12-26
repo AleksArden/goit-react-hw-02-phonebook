@@ -1,25 +1,47 @@
 import { Component } from 'react';
+import Notiflix from 'notiflix';
 import PropTypes from 'prop-types';
+
 import css from './ContactForm.module.css';
 
 export class ContactForm extends Component {
   static propTypes = {
     addContact: PropTypes.func.isRequired,
+    contacts: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        name: PropTypes.string.isRequired,
+        number: PropTypes.string.isRequired,
+      }).isRequired
+    ).isRequired,
   };
+
   state = {
     name: '',
     number: '',
   };
+
   handleChange = ({ target: { name, value } }) => {
     this.setState({ [name]: value });
   };
+
   handleSubmit = e => {
     e.preventDefault();
-    this.props.addContact({ ...this.state });
-    this.setState({ name: '', number: '' });
+
+    const { contacts } = this.props;
+    const hasSameName = contacts.some(({ name }) => name === this.state.name);
+    hasSameName
+      ? Notiflix.Notify.warning(`${this.state.name} is already in contacts`, {
+          position: 'center-center',
+          cssAnimationStyle: 'zoom',
+        })
+      : this.props.addContact({ ...this.state });
+    hasSameName || this.setState({ name: '', number: '' });
   };
+
   render() {
     const { name, number } = this.state;
+
     return (
       <form className={css.form} onSubmit={this.handleSubmit}>
         <div className={css.wrapper}>
@@ -36,6 +58,7 @@ export class ContactForm extends Component {
               onChange={this.handleChange}
             />
           </label>
+
           <label className={css.label}>
             Number
             <input
